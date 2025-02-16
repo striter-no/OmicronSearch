@@ -98,10 +98,14 @@ class Searcherer:
     async def search(self, query: str, depth=5, debug=True) -> str:
         if debug: print(f"Запрос: {query}")
 
+        theme_name = await self.mgpt.addMessageAsync(
+            query=f"Дан текст вопроса: {query}, тебе необходимо ответить его тему, для названия файла ответа. Отвечай только это, не добавляй ничего лишнего"
+        )
+
         if debug: print("\nРазбиение задачи на суб-темы")
         self.mgpt.setSystemQuery(self.msystem_prompt)
         ans = await self.mgpt.addMessageAsync(
-            query=f"""Запрос: <{query}>. Твоя задача сейчас: разбить задачу на несколько под-задач, для дальнейшего подробного исследования"""
+            query=f"""Запрос: <{query}>. Твоя задача сейчас: разбить задачу на несколько под-задач, для дальнейшего подробного исследования. Каждая тема должна быть самодостаточна, т.е. не опираться на результаты исследования предыдущих тем, так как они будут рассматриваться отдельно. """
         )
         tasks = jn.loads(ans)["tasks"]
         
@@ -162,11 +166,11 @@ class Searcherer:
                         time.sleep(tm)
                         tm *= 1.5
         
-        with open("./assets/analysis.json", "w") as f:
-            try:
-                jn.dump(google_analysis, f, indent=4, ensure_ascii=False)
-            except:
-                f.write(google_analysis)
+        # with open("./assets/analysis.json", "w") as f:
+        #     try:
+        #         jn.dump(google_analysis, f, indent=4, ensure_ascii=False)
+        #     except:
+        #         f.write(google_analysis)
         
         final_analysis = dict()
 
@@ -207,7 +211,7 @@ class Searcherer:
                 time.sleep(tm)
                 tm *= 1.5
         
-        return final, per_site
+        return final, per_site, theme_name
 
 async def main():
     s = Searcherer()

@@ -13,11 +13,8 @@ class GoogleSearcher():
     async def _fetch_url_content(
         self,
         session: aiohttp.ClientSession,
-        url: str,
-        proxy: dict[str, Any],
-        index: int
+        url: str
     ) -> tuple[str, str]:
-        # print(f"\r{Fore.LIGHTBLUE_EX}--> Gaining site: #{index}{Fore.RESET}", end="")
         try:
             async with session.get(url) as response:
                 if response.status != 200:
@@ -36,10 +33,9 @@ class GoogleSearcher():
                 text = soup.get_text()
                 lines = (line.strip() for line in text.splitlines())
                 text = ' '.join(chunk for chunk in lines if chunk)
-                # print(f"\r{Fore.LIGHTBLUE_EX}--> Gained site: #{index}{Fore.RESET}", end=" "*15)
                 return url, text
         except Exception as ex:
-            # print(f"\nError while getting {url}: {str(ex)}")
+            print(f"\nError while getting {url}: {str(ex)}")
             return url, ""
 
     async def search(
@@ -47,18 +43,16 @@ class GoogleSearcher():
         query: str,
         num_results: int,
         advanced_mode: bool = False,
-        proxy: dict[str, Any] = {}
+        proxy: dict[str, Any] | None = None
     ) -> dict[str, str]:
         results: dict[str, str] = {}
         urls = list(googleSearch(query.strip().strip('"'), num_results=num_results, advanced=advanced_mode))
         
-        # Создаем connector для SOCKS прокси
-        proxy_url = f"{proxy['protocol']}://{proxy['user']}:{proxy['password']}@{proxy['ip']}:{proxy['port']}"
-        connector = ProxyConnector.from_url(proxy_url)
+        connector = ProxyConnector.from_url(f"{proxy['protocol']}://{proxy['user']}:{proxy['password']}@{proxy['ip']}:{proxy['port']}") if proxy else None
         
-        async with aiohttp.ClientSession(connector=connector) as session:
+        async with aiohttp.ClientSession() as session:
             tasks = [
-                self._fetch_url_content(session, url, proxy, i+1)
+                self._fetch_url_content(session, url)
                 for i, url in enumerate(urls)
             ]
             completed = await asyncio.gather(*tasks)
