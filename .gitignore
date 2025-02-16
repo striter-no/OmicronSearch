@@ -1,0 +1,5 @@
+venv
+.vscode
+har_and_cookies
+__pycache__
+assets/*
