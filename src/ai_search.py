@@ -3,8 +3,22 @@ import src.gpt as gpt
 import src.search as search
 import json as jn
 import time
+import re
 
 class Searcherer:
+    
+    """
+    content = "<tag>content0</tag>\n<tag1>content1</tag1>"
+    output = {
+        "tag": "content0",
+        "tag1": "content1"
+    }
+    """
+    def _pseudo_html_parser(self, content: str) -> dict[str, str]:
+        pattern = r'<([^>]+)>([^<]+)</\1>'
+        matches = re.findall(pattern, content)
+        return {tag: value.strip() for tag, value in matches}
+
     def __init__(self, proxy=None):
         
         self.proxy = proxy
@@ -71,15 +85,13 @@ class Searcherer:
 Сделай акцент не на структуре и обобщении, а на содержании и практике.
 Не обязательно, что сайт пригодиться для анализа темы, для этого, сверяй его с общим вопросом.
 
-Твой ответ должен быть в формате JSON:
+Твой ответ должен быть в таком формате:
 ```
-{
-    "status": false, // Полезен ли сайт для темы, или нет
-    "analysis": "..." // Опционально. Если статус true, то это твой анализ
-}
+<status>False</status>, // Полезен ли сайт для темы, или нет
+<analysis>...</analysis> // Опционально. Если статус true, то это твой анализ
 ```
 
-В ответе не используй ``` для выделения JSON, пиши сразу в формате JSON. Ответ НЕ в формате JSON ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего
+Ответ НЕ в запрошенном формате ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего.
 """
         self.finala_system_prompt = """
 Тебе дается тема и анализ сайтов, которые были найдены в гугле. 
@@ -157,8 +169,14 @@ class Searcherer:
                         ans = await self.persite_gpt.addMessageAsync(
                             query=f"Первоначальный вопрос:<{query}>, Тема: <{sub_theme}>, Сайт: <{site}>, Содержимое:\n\n{content}"
                         )
-                        json_ans = jn.loads(ans)
-                        if json_ans["status"]:
+                        try:
+                            json_ans = self._pseudo_html_parser(ans)
+                        except Exception as ex:
+                            print(f"Failed to parse pseudo-HTML: {ex}")
+                            with open("./sites_failed_{rnd.randint(0, 1000000)}.json", "a") as f:
+                                f.write(ans + "\n")
+                                continue
+                        if json_ans["status"] == "True":
                             google_analysis[sub_theme][site] = json_ans["analysis"]
                         break
                     except gpt.g4f.errors.ResponseStatusError as ex:

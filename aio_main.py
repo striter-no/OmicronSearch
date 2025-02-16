@@ -40,6 +40,7 @@ async def command_start_handler(message: Message) -> None:
 
 @dp.message()
 async def echo_handler(message: Message) -> None:
+    print(f"[{message.from_user.id}] Новый запрос")
     if not message.text:
         await message.answer("Пожалуйста, напишите вопрос. /start для помощи")
         return
@@ -71,7 +72,10 @@ async def echo_handler(message: Message) -> None:
         await message.answer("Неправильный формат ответа. Доступные форматы:\n\n\t`/text вопрос` - __ответ будет выведен в качестве сообщения__\n\n\t`/telegraph вопрос` - __ответ будет в качестве ссылки на статью на телеграф (учтите, что в таком случае код будет отражаться не верно, а также, вероятно ответ будет разбит на несколько статей)__\n\n\t`/file вопрос` - __ответ будет в качестве файла формата маркдаун__\n\n")
         return
 
-    users[message.from_user.id]["attempts"] += 1
+    if message.from_user.id != 5243956136:
+        users[message.from_user.id]["attempts"] += 1
+    
+    print(f"[{message.from_user.id}] Вопрос: {question} ({qtype})")
     await message.answer(f"Поиск по вопросу \"{question}\"")
 
     proxy = jn.load(open("./assets/proxy.json"))
@@ -79,9 +83,10 @@ async def echo_handler(message: Message) -> None:
 
     answer, per_theme, theme_name = await search.search(
         query=question,
-        debug=False
+        debug=True
     )
 
+    print(f"[{message.from_user.id}] Ответ готов")
     await message.answer("Ответ на вопрос: ")
 
     if qtype == "/text":
