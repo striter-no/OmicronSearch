@@ -4,6 +4,7 @@ import math
 import json as jn
 import src.ai_search as ais
 import random as rnd
+import time
 
 from aiogram import Bot, Dispatcher, html
 from aiogram.client.default import DefaultBotProperties
@@ -14,6 +15,20 @@ from aiogram.types import Message
 
 from ytelegraph import TelegraphAPI
 
+
+def time_passed(start):
+    elapsed_time = time.time() - start
+    hours = int(elapsed_time // 3600)
+    minutes = int((elapsed_time % 3600) // 60)
+    seconds = int(elapsed_time % 60)
+
+    return (hours, minutes, seconds)
+
+def minutes_passed(start):
+    elapsed_time = time.time() - start
+    return elapsed_time // 60
+
+users = dict()
 TOKEN = jn.load(open("./assets/bot_config.json"))["api_token"]
 
 dp = Dispatcher()
@@ -21,10 +36,32 @@ bot = None
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    await message.answer("Это бот, основанный на проекте **OmicronSearch**. \n\nНапишите мне ваш вопрос, и я постараюсь проанализировать тему и выдать максимально подробный ответ. Также вам нужно указать формат ответа:\n\n\t`/text вопрос` - __ответ будет выведен в качестве сообщения__\n\n\t`/telegraph вопрос` - __ответ будет в качестве ссылки на статью на телеграф (учтите, что в таком случае код будет отражаться не верно, а также, вероятно ответ будет разбит на несколько статей)__\n\n\t`/file вопрос` - __ответ будет в качестве файла формата маркдаун__\n\nПодсказка: чем более структурированный и конкретный вопрос, тем лучше будет ответ.\n\n\tЕсли вы добавите `_file` на конец типа, то вы также получите версию ответа в файле (помимо указанной ранее)\n\nПредупреждение: бот ищет информацию **ДОЛГО** (2-3 минуты), дождитесь, пожалуйста, ответа.")
+    await message.answer("Это бот, основанный на проекте **OmicronSearch**. \n\nНапишите мне ваш вопрос, и я постараюсь проанализировать тему и выдать максимально подробный ответ. Также вам нужно указать формат ответа:\n\n\t`/text вопрос` - __ответ будет выведен в качестве сообщения__\n\n\t`/telegraph вопрос` - __ответ будет в качестве ссылки на статью на телеграф (учтите, что в таком случае код будет отражаться не верно, а также, вероятно ответ будет разбит на несколько статей)__\n\n\t`/file вопрос` - __ответ будет в качестве файла формата маркдаун__\n\nПодсказка: чем более структурированный и конкретный вопрос, тем лучше будет ответ.\n\n\tЕсли вы добавите `_file` на конец типа, то вы также получите версию ответа в файле (помимо указанной ранее)\n\nПредупреждение: бот ищет информацию **ДОЛГО** (2-3 минуты), дождитесь, пожалуйста, ответа.\n\nСейчас у всех пользователей лимит в 5 запросов за 30 минут!")
 
 @dp.message()
 async def echo_handler(message: Message) -> None:
+    if not message.text:
+        await message.answer("Пожалуйста, напишите вопрос. /start для помощи")
+        return
+    
+    if message.from_user.id != 5243956136:
+        if message.from_user.id not in users:
+            users[message.from_user.id] = {
+                "attempts": 0,
+                "start_time": time.time()
+            }
+            user = users[message.from_user.id]
+        else:
+            user = users[message.from_user.id]
+
+            if minutes_passed(user["start_time"]) >= 30 and user["attempts"] >= 3:
+                users[message.from_user.id]["attempts"] = 0
+                users[message.from_user.id]["start_time"] = time.time()
+
+            if user["attempts"] >= 5:
+                await message.answer("Вы привысили лимит в 5 запросов в 30 минут. Пожалуйста, подождите и попробуйте еще раз.")
+                return
+
     question = " ".join(message.md_text.split()[1:])
     qtype = message.text.split()[0]
     is_backuping = qtype.endswith("_file") and qtype != "/file_file"
@@ -34,13 +71,15 @@ async def echo_handler(message: Message) -> None:
         await message.answer("Неправильный формат ответа. Доступные форматы:\n\n\t`/text вопрос` - __ответ будет выведен в качестве сообщения__\n\n\t`/telegraph вопрос` - __ответ будет в качестве ссылки на статью на телеграф (учтите, что в таком случае код будет отражаться не верно, а также, вероятно ответ будет разбит на несколько статей)__\n\n\t`/file вопрос` - __ответ будет в качестве файла формата маркдаун__\n\n")
         return
 
+    users[message.from_user.id]["attempts"] += 1
     await message.answer(f"Поиск по вопросу \"{question}\"")
 
     proxy = jn.load(open("./assets/proxy.json"))
     search = ais.Searcherer(proxy)
 
     answer, per_theme, theme_name = await search.search(
-        query=question
+        query=question,
+        debug=False
     )
 
     await message.answer("Ответ на вопрос: ")
@@ -64,7 +103,7 @@ async def echo_handler(message: Message) -> None:
         await message.answer_document(docfile)
     elif qtype == "/telegraph":
         per_theme = per_theme[per_theme.index("\n"):]
-        ph = TelegraphAPI()
+        ph = TelegraphAPI(short_name="OmicronSearch AI")
         links = []
         step = 12*1024
         i, iteri = 0, 0
