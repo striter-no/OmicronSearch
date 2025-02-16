@@ -90,13 +90,21 @@ async def echo_handler(message: Message) -> None:
     await message.answer("Ответ на вопрос: ")
 
     if qtype == "/text":
+        
         i = 0
+        
         while True:
             if i >= len(per_theme):
                 break
-            await message.answer(
-                per_theme[i:i+4000]
-            )
+            try:
+                await message.answer(
+                    per_theme[i:i+4000]
+                )
+            except:
+                await message.answer(
+                    per_theme[i:i+4000],
+                    parse_mode=None
+                )
             i += 4000
 
     elif qtype == "/file":
