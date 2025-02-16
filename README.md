@@ -17,6 +17,10 @@ pip install -r req.txt
 Далее, в зависимости от версии, которые вы хотите использовать запустите:
 
 ```
-python3 main.py # Для версии библиотеки
-python3 aio_main.py # Для версии телеграм бота
+# Для версии библиотеки
+python3 main.py 
+
+# Для версии телеграм бота
+pip install aiogram your-telegraph
+python3 aio_main.py 
 ```
