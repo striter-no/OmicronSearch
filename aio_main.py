@@ -15,7 +15,6 @@ from aiogram.types import Message
 
 from ytelegraph import TelegraphAPI
 
-
 def time_passed(start):
     elapsed_time = time.time() - start
     hours = int(elapsed_time // 3600)
@@ -39,7 +38,7 @@ async def command_start_handler(message: Message) -> None:
     await message.answer("Это бот, основанный на проекте **OmicronSearch**. \n\nНапишите мне ваш вопрос, и я постараюсь проанализировать тему и выдать максимально подробный ответ. Также вам нужно указать формат ответа:\n\n\t`/text вопрос` - __ответ будет выведен в качестве сообщения__\n\n\t`/telegraph вопрос` - __ответ будет в качестве ссылки на статью на телеграф (учтите, что в таком случае код будет отражаться не верно, а также, вероятно ответ будет разбит на несколько статей)__\n\n\t`/file вопрос` - __ответ будет в качестве файла формата маркдаун__\n\nПодсказка: чем более структурированный и конкретный вопрос, тем лучше будет ответ.\n\n\tЕсли вы добавите `_file` на конец типа, то вы также получите версию ответа в файле (помимо указанной ранее)\n\nПредупреждение: бот ищет информацию **ДОЛГО** (2-3 минуты), дождитесь, пожалуйста, ответа.\n\nСейчас у всех пользователей лимит в 5 запросов за 30 минут!")
 
 @dp.message()
-async def echo_handler(message: Message) -> None:
+async def message_handler(message: Message) -> None:
     print(f"[{message.from_user.id}] Новый запрос")
     if not message.text:
         await message.answer("Пожалуйста, напишите вопрос. /start для помощи")
