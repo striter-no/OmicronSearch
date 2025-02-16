@@ -89,45 +89,57 @@ async def echo_handler(message: Message) -> None:
     print(f"[{message.from_user.id}] Ответ готов")
     await message.answer("Ответ на вопрос: ")
 
-    if qtype == "/text":
-        
-        i = 0
-        
-        while True:
-            if i >= len(per_theme):
-                break
-            try:
-                await message.answer(
-                    per_theme[i:i+4000]
-                )
-            except:
-                await message.answer(
-                    per_theme[i:i+4000],
-                    parse_mode=None
-                )
-            i += 4000
+    try:
+        if qtype == "/text":
+            
+            i = 0
+            
+            while True:
+                if i >= len(per_theme):
+                    break
+                try:
+                    await message.answer(
+                        per_theme[i:i+4000]
+                    )
+                except:
+                    await message.answer(
+                        per_theme[i:i+4000],
+                        parse_mode=None
+                    )
+                i += 4000
 
-    elif qtype == "/file":
+        elif qtype == "/file":
+            token = rnd.randint(0, 10000000)
+            with open(f"./assets/answer_{token}.md", "w") as f:
+                f.write(per_theme)
+            
+            docfile = FSInputFile(f"./assets/answer_{token}.md", filename=theme_name)
+            await message.answer_document(docfile)
+        elif qtype == "/telegraph":
+            per_theme = per_theme[per_theme.index("\n"):]
+            ph = TelegraphAPI(short_name="OmicronSearch AI")
+            links = []
+            step = 10*1024
+            i, iteri = 0, 0
+            while True:
+                if i >= len(per_theme):
+                    break
+                links.append(ph.create_page_md(f"{theme_name} ({iteri+1})", per_theme[i:i+step]))
+                i += step
+                iteri += 1
+            
+            await message.answer(f"Ссылки:\n{'\n'.join(links)}")
+    except Exception as ex:
+        print(f"[{message.from_user.id}] Не получилось отослать ответ: {ex}")
+        await message.answer("Не получилось отослать ответ, высылаю файловую версию")
+        
         token = rnd.randint(0, 10000000)
         with open(f"./assets/answer_{token}.md", "w") as f:
             f.write(per_theme)
         
         docfile = FSInputFile(f"./assets/answer_{token}.md", filename=theme_name)
         await message.answer_document(docfile)
-    elif qtype == "/telegraph":
-        per_theme = per_theme[per_theme.index("\n"):]
-        ph = TelegraphAPI(short_name="OmicronSearch AI")
-        links = []
-        step = 12*1024
-        i, iteri = 0, 0
-        while True:
-            if i >= len(per_theme):
-                break
-            links.append(ph.create_page_md(f"{theme_name} ({iteri+1})", per_theme[i:i+step]))
-            i += step
-            iteri += 1
-        
-        await message.answer(f"Ссылки:\n{'\n'.join(links)}")
+        return
 
     if is_backuping:
         token = rnd.randint(0, 10000000)
