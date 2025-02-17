@@ -80,11 +80,27 @@ async def message_handler(message: Message) -> None:
     await message.answer(f"Поиск по вопросу \"{question}\"")
 
     proxy = jn.load(open("./assets/proxy.json"))
-    search = ais.Searcherer(proxy)
+    search = ais.Searcherer()
+
+    message_id = (await message.answer("Поиск...")).message_id
+
+    async def asyDebugHandler(debug_message: str): 
+        await bot.edit_message_text(
+            chat_id=message.chat.id,
+            message_id=message_id,
+            text=debug_message.strip(),
+            parse_mode=None
+        )
 
     answer, per_theme, theme_name, sources = await search.search(
         query=question,
-        debug=True
+        debug=True,
+        debugHandler=asyDebugHandler
+    )
+
+    await bot.delete_message(
+        chat_id=message.chat.id,
+        message_id=message_id
     )
 
     print(f"[{message.from_user.id}] Ответ готов")
@@ -149,6 +165,8 @@ async def message_handler(message: Message) -> None:
         
         docfile = FSInputFile(f"./assets/answer_{token}.md", filename=theme_name)
         await message.answer_document(docfile)
+
+    await message.answer(f"Источники:\n {'\n'.join(sources)}", parse_mode=None)
 
 async def main() -> None:
     global bot

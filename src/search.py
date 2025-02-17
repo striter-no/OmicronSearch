@@ -46,6 +46,8 @@ class GoogleSearcher():
         proxy: dict[str, Any] | None = None
     ) -> dict[str, str]:
         results: dict[str, str] = {}
+
+        # print(f"Searching: {query.strip().strip('"') + " -filetype:pdf"}")
         urls = list(googleSearch(query.strip().strip('"') + " -filetype:pdf", num_results=num_results, advanced=advanced_mode))
         
         connector = ProxyConnector.from_url(f"{proxy['protocol']}://{proxy['user']}:{proxy['password']}@{proxy['ip']}:{proxy['port']}") if proxy else None
