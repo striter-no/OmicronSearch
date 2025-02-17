@@ -71,7 +71,7 @@ async def message_handler(message: Message) -> None:
         qtype = "/text"
         # await message.answer("Неправильный формат ответа. Доступные форматы:\n\n\t`/text вопрос` - __ответ будет выведен в качестве сообщения__\n\n\t`/telegraph вопрос` - __ответ будет в качестве ссылки на статью на телеграф (учтите, что в таком случае код будет отражаться не верно, а также, вероятно ответ будет разбит на несколько статей)__\n\n\t`/file вопрос` - __ответ будет в качестве файла формата маркдаун__\n\n")
         await message.answer("Формат ответа автоматически изменен на `/text`")
-        return
+        # return
 
     if message.from_user.id != 5243956136:
         users[message.from_user.id]["attempts"] += 1
