@@ -56,15 +56,161 @@
         }
 
         .result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            background-color: #f0f0f0;
+            width: 90%;
+            max-width: 900px;
+            padding: 25px;
+            margin: 20px auto;
+            border-radius: 15px;
+            background-color: rgba(240, 240, 240, 0.9);
+            color: #333;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        body {
+            min-height: 100vh;
+            padding-bottom: 60px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .sidebar-left {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: #f8f9fa;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-left.visible {
+            transform: translateX(0);
+        }
+
+        .user-panel {
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .search-history {
+            padding: 20px;
+        }
+
+        .search-history h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
             color: #333;
         }
 
-        .dark-theme .result {
+        .search-history ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .search-history li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .search-history li:hover {
+            background-color: #f5f5f5;
+        }
+
+        .dark-theme .search-history h3 {
+            color: #fff;
+        }
+
+        .dark-theme .search-history li {
+            border-color: #444;
+        }
+
+        .dark-theme .search-history li:hover {
             background-color: #333;
+        }
+
+        .user-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #007bff;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .login-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 16px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .modal-content input,
+        .modal-content button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .modal-content button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .dark-theme .result {
+            background-color: rgba(51, 51, 51, 0.9);
             color: #fff;
         }
 
@@ -112,9 +258,91 @@
         .dark-theme .sidebar a {
             color: #4dabf7;
         }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            background-color: #007bff;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            z-index: 1003;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translate(-50%, -100%); }
+            to { transform: translate(-50%, 0); }
+        }
+
+        .notification.error {
+            background-color: #a9c6dfb0;
+        }
+
+        .debug-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 200px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .debug-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+
+        .debug-message {
+            padding: 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .dark-theme .debug-container {
+            background-color: #2d2d2d;
+            color: #fff;
+        }
+
+        .dark-theme .debug-message {
+            color: #ccc;
+        }
     </style>
 </head>
 <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="sidebar-left">
+        <div class="user-panel">
+            <div class="user-icon"></div>
+            <button class="login-btn" onclick="toggleLoginModal()">Войти</button>
+        </div>
+        <div class="search-history">
+            <h3>История поиска</h3>
+            <ul id="historyList"></ul>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-content">
+            <h2>Авторизация</h2>
+            <input type="text" placeholder="Логин">
+            <input type="password" placeholder="Пароль">
+            <button onclick="handleLogin()">Войти</button>
+        </div>
+    </div>
+
+    <div class="debug-container">
+        <h3>Debug Messages</h3>
+        <div id="debug-messages"></div>
+    </div>
     <div class="search-container">
         <input type="text" class="search-input" id="searchInput" placeholder="Введите запрос...">
         <div class="result" id="result"></div>
@@ -127,7 +355,119 @@
 
     <button class="theme-toggle" onclick="toggleTheme()">Темная тема</button>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
     <script>
+        const socket = io();
+        
+        socket.on('debug_message', function(data) {
+            const debugDiv = document.getElementById('debug-messages');
+            const message = document.createElement('div');
+            message.className = 'debug-message';
+            message.textContent = data.message;
+            debugDiv.appendChild(message);
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        });
+        function toggleSidebar(show) {
+            const sidebar = document.querySelector('.sidebar-left');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (typeof show === 'boolean') {
+                sidebar.classList.toggle('visible', show);
+                menuToggle.style.display = show ? 'none' : 'block';
+                document.body.style.marginLeft = show ? '250px' : '0';
+            } else {
+                const isVisible = sidebar.classList.toggle('visible');
+                menuToggle.style.display = isVisible ? 'none' : 'block';
+                document.body.style.marginLeft = isVisible ? '250px' : '0';
+            }
+        }
+
+        // Закрытие модального окна при клике вне его
+        document.addEventListener('click', (event) => {
+            const modal = document.getElementById('loginModal');
+            const modalContent = document.querySelector('.modal-content');
+            
+            // Закрытие sidebar
+            const sidebar = document.querySelector('.sidebar-left');
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+                toggleSidebar(false);
+            }
+            
+            // Закрытие модального окна
+            const loginBtn = document.querySelector('.login-btn');
+            if (modal.classList.contains('visible') && 
+                !modalContent.contains(event.target) &&
+                event.target !== loginBtn) {
+                toggleLoginModal();
+            }
+        });
+
+        // Закрытие модального окна при нажатии ESC
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('loginModal');
+                if (modal.classList.contains('visible')) {
+                    toggleLoginModal();
+                }
+            }
+        });
+
+        function toggleLoginModal() {
+            const modal = document.getElementById('loginModal');
+            modal.classList.toggle('visible');
+            
+            // Сброс значений полей ввода при закрытии
+            if (!modal.classList.contains('visible')) {
+                document.querySelector('.modal-content input[type="text"]').value = '';
+                document.querySelector('.modal-content input[type="password"]').value = '';
+            }
+        }
+
+        async function handleLogin() {
+            const username = document.querySelector('.modal-content input[type="text"]').value;
+            const password = document.querySelector('.modal-content input[type="password"]').value;
+
+            // try {
+                // Хэширование пароля с использованием SHA-256
+                const passwordHash = sha256(password);
+
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: passwordHash
+                    })
+                });
+
+                const data = await response.json();
+                
+                const notification = document.createElement('div');
+                notification.className = `notification ${data.status ? '' : 'error'}`;
+                notification.textContent = data.message;
+                document.body.appendChild(notification);
+                
+                if (data.status) {
+                    console.log("Success")
+                    // Сохраняем данные пользователя
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('password', passwordHash);
+                    toggleLoginModal();
+                }
+                
+                // Автоматическое удаление уведомления через 3 секунды
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            // } catch (error) {
+            //     alert('Ошибка при попытке входа');
+            // }
+        }
+
         function toggleTheme() {
             const body = document.body;
             const themeButton = document.querySelector('.theme-toggle');
@@ -150,15 +490,37 @@
                 document.querySelector('.sidebar').classList.add('visible');
             
             try {
+                // Получаем сохраненные данные пользователя
+                const username = localStorage.getItem('username') || '';
+                const password = localStorage.getItem('password') || '';
+                
                 const response = await fetch('/process', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ text: input.value })
+                    body: JSON.stringify({ 
+                        text: input.value,
+                        username: username,
+                        password: password
+                    })
                 });
                 
                 const data = await response.json();
+                
+                if (data.status != "ok"){
+                    const notification = document.createElement('div');
+                    notification.className = `notification ${data.status ? '' : 'error'}`;
+                    notification.textContent = data.status;
+                    document.body.appendChild(notification);
+
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 3000);
+
+                    throw new Error(data.status);
+                }
+
                 resultDiv.innerHTML = data.content;
                 
                 // Обновляем список источников
@@ -171,9 +533,85 @@
             }
         }
 
+        // Функция для сохранения запроса в историю
+        function saveToHistory(query) {
+            let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            // Добавляем запрос в начало списка
+            history.unshift({
+                query: query,
+                timestamp: new Date().toLocaleString()
+            });
+            // Ограничиваем историю последними 10 запросами
+            history = history.slice(0, 10);
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+            renderHistory();
+        }
+
+        // Функция для отображения истории
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            
+            historyList.innerHTML = history.map(item => `
+                <li onclick="useHistoryItem('${item.query}')">
+                    ${item.query}<br>
+                    <small>${item.timestamp}</small>
+                </li>
+            `).join('');
+        }
+
+        // Функция для использования элемента истории
+        async function useHistoryItem(query) {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.value = query;
+            
+            // Получаем данные по теме
+            const username = localStorage.getItem('username') || '';
+            const password = localStorage.getItem('password') || '';
+            
+            try {
+                const response = await fetch('/get_theme_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        theme: query,
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    
+                    // Отображаем вопрос и ответ
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = data.question;
+
+                    document.querySelector('.sidebar').classList.add('visible');
+
+                    const sourcesList = document.getElementById('sources');
+                    sourcesList.innerHTML = data.sources.map(source => 
+                        `<li><a href="${source.url}" target="_blank">${source.title}</a></li>`
+                    ).join('');
+
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Ошибка при получении данных по теме');
+            }
+        }
+
+        // Инициализация истории при загрузке
+        renderHistory();
+
         const searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
+                saveToHistory(searchInput.value);
                 sendRequest();
             }
         });

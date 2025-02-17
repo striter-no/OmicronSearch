@@ -5,6 +5,9 @@ import json as jn
 import time
 import re
 
+async def asyPrint(msg):
+    print(msg)
+
 class Searcherer:
     
     """
@@ -110,14 +113,14 @@ class Searcherer:
 Сделай вывод по данным анализам тем. Отвечай в формате Markdown. Сделай максимально полный по объему вывод.
 """
 
-    async def search(self, query: str, depth=5, debug=True) -> tuple[str, str, str, list[str]]:
-        if debug: print(f"Запрос: {query}")
+    async def search(self, query: str, depth=5, debug=True, debugHandler = asyPrint) -> tuple[str, str, str, list[str]]:
+        if debug: await debugHandler(f"Запрос: {query}")
 
         theme_name = await self.mgpt.addMessageAsync(
             query=f"Дан текст вопроса: {query}, тебе необходимо ответить его тему, для названия файла ответа. Отвечай только это, не добавляй ничего лишнего"
         )
 
-        if debug: print("\nРазбиение задачи на суб-темы")
+        if debug: await debugHandler("\nРазбиение задачи на суб-темы")
         self.mgpt.setSystemQuery(self.msystem_prompt)
         ans = await self.mgpt.addMessageAsync(
             query=f"""Запрос: <{query}>. """
@@ -126,11 +129,11 @@ class Searcherer:
         
         google_results = dict()
         
-        if debug: print("\nГугление тем")
+        if debug: await debugHandler("\nГугление тем")
         self.mgpt.setSystemQuery(self.subsearch_system_prompt)
         for task in tasks:
             name, question = task["name"], task["content"]
-            if debug: print(f"\tТема: {name}, Вопрос: {question}")
+            if debug: await debugHandler(f"\tТема: {name}, Вопрос: {question}")
             tm = 1.0
             while True:
                 try:
@@ -156,15 +159,16 @@ class Searcherer:
         #     jn.dump(google_results, f, indent=4, ensure_ascii=False)
 
         google_analysis = dict()
+        sources = []
 
-        if debug: print("\nАнализ сайтов")
+        if debug: await debugHandler("\nАнализ сайтов")
         self.persite_gpt.setSystemQuery(self.persite_system_prompt)
         for sub_theme, results in google_results.items():
-            if debug: print(f"\nСуб-тема: {sub_theme}")
+            if debug: await debugHandler(f"\nСуб-тема: {sub_theme}")
             self.persite_gpt.clearContext()
             google_analysis[sub_theme] = {}
             for site, content in results.items():
-                if debug: print(f"\tСайт: {site[:100]}")
+                if debug: await debugHandler(f"\tСайт: {site[:100]}")
                 if content == "": continue
                 tm = 1.0
                 while True:
@@ -175,12 +179,13 @@ class Searcherer:
                         try:
                             json_ans = self._pseudo_html_parser(ans)
                         except Exception as ex:
-                            print(f"Failed to parse pseudo-HTML: {ex}")
+                            await debugHandler(f"Failed to parse pseudo-HTML: {ex}")
                             with open("./sites_failed_{rnd.randint(0, 1000000)}.json", "a") as f:
                                 f.write(ans + "\n")
                                 continue
                         if json_ans["status"] == "True":
                             google_analysis[sub_theme][site] = json_ans["analysis"]
+                            sources.append(site)
                         break
                     except gpt.g4f.errors.ResponseStatusError as ex:
                         print(f"Error: {ex.args}")
@@ -195,10 +200,10 @@ class Searcherer:
         
         final_analysis = dict()
 
-        if debug: print("\nСборка анализов тем")
+        if debug: await debugHandler("\nСборка анализов тем")
         self.fanalysis_gpt.setSystemQuery(self.finala_system_prompt)
         for sub_theme, sites in google_analysis.items():
-            if debug: print(f"\tСуб-тема: {sub_theme}")
+            if debug: await debugHandler(f"\tСуб-тема: {sub_theme}")
             tm = 1.0
             while True:
                 try:
@@ -217,7 +222,7 @@ class Searcherer:
             per_site += ans + "\n"
         
 
-        if debug: print("\nСборка ответа")
+        if debug: await debugHandler("\nСборка ответа")
 
         self.conclusion_gpt.setSystemQuery(self.conclusion_system_prompt)
         final = ""
@@ -232,7 +237,7 @@ class Searcherer:
                 time.sleep(tm)
                 tm *= 1.5
         
-        return final, per_site, theme_name, [site for (sub_theme, site) in google_analysis.items()]
+        return final, per_site, theme_name, sources
 
 async def main():
     s = Searcherer()

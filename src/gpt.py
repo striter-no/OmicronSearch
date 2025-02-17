@@ -7,8 +7,9 @@ import g4f
 import os
 
 class Chat:
-    def __init__(self, model: modelType = models_stock.gpt_4o_mini, provider: providerType = provider_stock.Pizzagpt) -> None:
+    def __init__(self, model: modelType = models_stock.gpt_4o_mini, provider: providerType = provider_stock.Pizzagpt, input_tokens_limit=512_000) -> None:
         self.messages: list[tuple[str, str]] = []
+        self.input_tokens_limit = input_tokens_limit
         self.systemQuery: str = ""
         self.model = model
         self.provider = provider
@@ -45,6 +46,7 @@ class Chat:
             response = self.client.chat.completions.create(
                 messages=all_messages,
                 images=self._get_images(images),
+                max_tokens=self.input_tokens_limit,
                 ignore_working=True,
                 model=specified_model if not (specified_model is None) else self.model
             )
@@ -52,6 +54,7 @@ class Chat:
             response = self.client.chat.completions.create(
                 messages=all_messages,
                 images=self._get_images(images),
+                max_tokens=self.input_tokens_limit,
                 provider=None,
                 model=specified_model if not (specified_model is None) else self.model
             )
