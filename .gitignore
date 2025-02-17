@@ -3,3 +3,4 @@ venv
 har_and_cookies
 __pycache__
 assets/*
+databases/*

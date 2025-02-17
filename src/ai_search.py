@@ -165,9 +165,9 @@ class Searcherer:
         self.persite_gpt.setSystemQuery(self.persite_system_prompt)
         for sub_theme, results in google_results.items():
             if debug: await debugHandler(f"\nСуб-тема: {sub_theme}")
-            self.persite_gpt.clearContext()
             google_analysis[sub_theme] = {}
             for site, content in results.items():
+                self.persite_gpt.clearContext()
                 if debug: await debugHandler(f"\tСайт: {site[:100]}")
                 if content == "": continue
                 tm = 1.0

@@ -36,7 +36,7 @@ async def process_text(text):
         debug=True,
         debugHandler=asyDebugPoster
     )
-    sources = [{"title": url[url.index("//")+2:50], "url": url} for (sub_theme, url) in raw_sources.items()]
+    sources = [{"title": url[url.index("//")+2:50], "url": url} for url in raw_sources]
     
     return {
         "content": markdown2.markdown(per_theme),
