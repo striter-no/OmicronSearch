@@ -17,7 +17,9 @@ users_db = db.DataBase("./databases/users.json")
 async def process_text(text):
 
     async def asyDebugPoster(message: str):
-        socketio.emit('debug_message', {'message': message})
+        sid = request.sid
+        if sid:
+            socketio.emit('debug_message', {'message': message}, room=sid)
 
     # await asyncio.sleep(2)
 
@@ -43,6 +45,14 @@ async def process_text(text):
         "sources": sources
     }
 
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected:', request.sid)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected:', request.sid)
+    
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -135,4 +145,4 @@ def get_theme_data():
     })
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0')
+    socketio.run(app, host='0.0.0.0', port=8080)

@@ -132,16 +132,33 @@
             background-color: #f5f5f5;
         }
 
+        .dark-theme .sidebar-left {
+            background-color: #2d2d2d;
+        }
+
+        .dark-theme .user-panel {
+            border-color: #444;
+        }
+
         .dark-theme .search-history h3 {
             color: #fff;
         }
 
         .dark-theme .search-history li {
             border-color: #444;
+            color: #fff;
         }
 
         .dark-theme .search-history li:hover {
             background-color: #333;
+        }
+
+        .dark-theme .login-btn {
+            color: #4dabf7;
+        }
+
+        .dark-theme .user-icon {
+            background-color: #4dabf7;
         }
 
         .user-icon {
@@ -428,6 +445,9 @@
         async function handleLogin() {
             const username = document.querySelector('.modal-content input[type="text"]').value;
             const password = document.querySelector('.modal-content input[type="password"]').value;
+
+            // Получаем идентификатор сессии
+            const sid = socket.id;
 
             // try {
                 // Хэширование пароля с использованием SHA-256
