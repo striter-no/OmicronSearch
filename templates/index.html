@@ -61,7 +61,7 @@
             padding: 25px;
             margin: 20px auto;
             border-radius: 15px;
-            background-color: rgba(240, 240, 240, 0.9);
+            background-color: rgba(241, 241, 241, 0.7);
             color: #333;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(5px);
@@ -71,6 +71,11 @@
             min-height: 100vh;
             padding-bottom: 60px;
             transition: margin-left 0.3s ease;
+            background-image: url('./background');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            backdrop-filter: blur(5px);
         }
 
         .menu-toggle {
@@ -86,13 +91,13 @@
 
         .sidebar-left {
             position: fixed;
-            left: 0;
+            left: -250px;
             top: 0;
             width: 250px;
             height: 100vh;
             background-color: #f8f9fa;
             box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-            transform: translateX(-100%);
+            transform: translateX(0px);
             transition: transform 0.3s ease;
             z-index: 1000;
         }

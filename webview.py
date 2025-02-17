@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file
 from flask_socketio import SocketIO
 from datetime import datetime
 import src.ai_search as ais
@@ -59,6 +59,10 @@ def handle_disconnect():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route("/background")
+def backgrounds():
+    return send_file("./assets/background.jpg", mimetype="image/jpeg")
 
 @app.route('/login', methods=['POST'])
 def login():
