@@ -88,14 +88,16 @@ class Chat:
                 messages=all_messages,
                 images=self._get_images(images),
                 ignore_working=True,
-                model=specified_model if not (specified_model is None) else self.model
+                model=specified_model if not (specified_model is None) else self.model,
+                max_tokens=128000
             )
         else:
             response = await self.asy_client.chat.completions.create(
                 messages=all_messages,
                 images=self._get_images(images),
                 provider=None,
-                model=specified_model if not (specified_model is None) else self.model
+                model=specified_model if not (specified_model is None) else self.model,
+                max_tokens=128000
             )
         resp_text = response.choices[0].message.content
         

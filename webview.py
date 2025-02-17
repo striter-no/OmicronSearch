@@ -8,11 +8,23 @@ app = Flask(__name__)
 async def process_text(text):
     # Имитация обработки данных
     search = ais.Searcherer()
-    answer, per_theme, theme_name = await search.search(
+    answer, per_theme, theme_name, raw_sources = await search.search(
         query=text,
     )
     
-    return markdown2.markdown(per_theme)
+    # Пример списка источников
+    # sources = [
+    #     {"title": "Источник 1", "url": "https://example.com/source1"},
+    #     {"title": "Источник 2", "url": "https://example.com/source2"},
+    #     {"title": "Источник 3", "url": "https://example.com/source3"}
+    # ]
+
+    sources = [{"title": url[url.index("//")+2:50], "url": url} for url in raw_sources]
+    
+    return {
+        "content": markdown2.markdown(per_theme),
+        "sources": sources
+    }
 
 @app.route('/')
 def index():
@@ -26,7 +38,7 @@ def process():
     # Запуск асинхронной функции
     result = asyncio.run(process_text(text))
     
-    return jsonify({'result': result})
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(

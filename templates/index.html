@@ -67,12 +67,62 @@
             background-color: #333;
             color: #fff;
         }
+
+        .sidebar {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            width: 250px;
+            height: auto;
+            max-height: 80vh;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            overflow-y: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .sidebar.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .dark-theme .sidebar {
+            background-color: #2d2d2d;
+            color: #fff;
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        .sidebar ul {
+            padding-left: 20px;
+        }
+
+        .sidebar a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .dark-theme .sidebar a {
+            color: #4dabf7;
+        }
     </style>
 </head>
 <body>
     <div class="search-container">
         <input type="text" class="search-input" id="searchInput" placeholder="Введите запрос...">
         <div class="result" id="result"></div>
+    </div>
+
+    <div class="sidebar">
+        <h3>Источники</h3>
+        <ul id="sources"></ul>
     </div>
 
     <button class="theme-toggle" onclick="toggleTheme()">Темная тема</button>
@@ -95,7 +145,9 @@
             const input = document.getElementById('searchInput');
             const resultDiv = document.getElementById('result');
             
-            resultDiv.textContent = 'Обработка...';
+                resultDiv.textContent = 'Обработка...';
+                // Показываем боковое меню
+                document.querySelector('.sidebar').classList.add('visible');
             
             try {
                 const response = await fetch('/process', {
@@ -107,7 +159,13 @@
                 });
                 
                 const data = await response.json();
-                resultDiv.innerHTML = data.result;
+                resultDiv.innerHTML = data.content;
+                
+                // Обновляем список источников
+                const sourcesList = document.getElementById('sources');
+                sourcesList.innerHTML = data.sources.map(source => 
+                    `<li><a href="${source.url}" target="_blank">${source.title}</a></li>`
+                ).join('');
             } catch (error) {
                 resultDiv.textContent = 'Ошибка при обработке запроса';
             }

@@ -19,7 +19,7 @@ class Searcherer:
         matches = re.findall(pattern, content)
         return {tag: value.strip() for tag, value in matches}
 
-    def __init__(self, proxy=None, site_maximum=510_000):
+    def __init__(self, proxy=None, site_maximum=220_000):
         
         self.proxy = proxy
         self.site_maximum = site_maximum
@@ -110,7 +110,7 @@ class Searcherer:
 Сделай вывод по данным анализам тем. Отвечай в формате Markdown. Сделай максимально полный по объему вывод.
 """
 
-    async def search(self, query: str, depth=5, debug=True) -> str:
+    async def search(self, query: str, depth=5, debug=True) -> tuple[str, str, str, list[str]]:
         if debug: print(f"Запрос: {query}")
 
         theme_name = await self.mgpt.addMessageAsync(
@@ -232,7 +232,7 @@ class Searcherer:
                 time.sleep(tm)
                 tm *= 1.5
         
-        return final, per_site, theme_name
+        return final, per_site, theme_name, [site for (sub_theme, site) in google_analysis.items()]
 
 async def main():
     s = Searcherer()
