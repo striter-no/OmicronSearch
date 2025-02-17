@@ -219,7 +219,7 @@ class Searcherer:
                     time.sleep(tm)
                     tm *= 1.5
 
-        per_site = f"# {query.capitalize()}\n"
+        per_site = f"# {theme_name.capitalize()}\n"
         for sub_theme, ans in final_analysis.items():
             per_site += f"## {sub_theme}\n\n"
             per_site += ans + "\n"
