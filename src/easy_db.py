@@ -8,7 +8,7 @@ def load_json(filename):
 
 def save_json(filename, data):
     with open(filename, "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f, indent=4, ensure_ascii=False)
 
 
 class DataBase:

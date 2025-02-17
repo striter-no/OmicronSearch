@@ -19,8 +19,6 @@ async def process_text(text, sid=None):
     async def asyDebugPoster(message: str):
         if sid:
             socketio.emit('debug_message', {'message': message}, room=sid)
-        else:
-            print(f"NO_SID: {message}")
 
     # await asyncio.sleep(2)
 
@@ -41,9 +39,13 @@ async def process_text(text, sid=None):
     )
     sources = [{"title": url[url.index("//")+2:50], "url": url} for url in raw_sources]
     
+    with open("./ans.md", "w") as f:
+        f.write(per_theme)
+
     return {
         "content": markdown2.markdown(per_theme),
-        "sources": sources
+        "sources": sources,
+        "raw": per_theme,
     }
 
 @socketio.on('connect')
@@ -80,10 +82,13 @@ def login():
         users_db.set(username, {"passwd_hash": password})
         status = True
 
-    return jsonify({
+    response = jsonify({
         "message": message,
         "status": status
     })
+    
+    # response.set_cookie('session', '', expires=0)
+    return response
 
 @app.route('/process', methods=['POST'])
 def process():
@@ -105,7 +110,7 @@ def process():
         history = users_db.get(username).get('history', [])
         history.append({
             'question': text,
-            'answer': result['content'],
+            'answer': result['raw'],
             'sources': result['sources'],
             'timestamp': datetime.now().isoformat()
         })
@@ -115,6 +120,22 @@ def process():
         })
 
     return jsonify(result)
+
+@app.route('/get_history')
+def get_history():
+    data = request.json
+    username, password = data.get('username', ''), data.get('password', '')
+
+    if not users_db.exists(username):
+        return jsonify({"status": "Сначала вам нужно зарегистрироваться"})
+    if users_db.get(username)["passwd_hash"] != password:
+        return jsonify({"status": "Неверный логин и/или пароль. Сначала вам нужно зарегистрироваться"})
+
+    history = users_db.get(username).get('history', [])
+    return jsonify({
+        "status": "ok",
+        "history": history
+    })
 
 @app.route('/get_theme_data', methods=['POST'])
 def get_theme_data():
@@ -142,7 +163,7 @@ def get_theme_data():
     return jsonify({
         'status': 'ok',
         'theme': theme,
-        'question': this_hist.get("answer", "Ничего не нашлось..."),
+        'question': markdown2.markdown(this_hist.get("answer", "Ничего не нашлось...")),
         "sources": this_hist.get("sources", [])
     })
 
