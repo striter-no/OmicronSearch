@@ -1,6 +1,7 @@
 import asyncio as asy
 import src.gpt as gpt
 import src.search as search
+import random as rnd
 import json as jn
 import time
 import re
@@ -178,9 +179,11 @@ class Searcherer:
                         )
                         try:
                             json_ans = self._pseudo_html_parser(ans)
+                            with open(f"./sites_{site[:100]}_{rnd.randint(0, 1000000)}.json", "a") as f:
+                                f.write(ans + "\n")
                         except Exception as ex:
                             await debugHandler(f"Failed to parse pseudo-HTML: {ex}")
-                            with open("./sites_failed_{rnd.randint(0, 1000000)}.json", "a") as f:
+                            with open(f"./sites_failed_{rnd.randint(0, 1000000)}.json", "a") as f:
                                 f.write(ans + "\n")
                                 continue
                         if json_ans["status"] == "True":
