@@ -14,12 +14,13 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 users_db = db.DataBase("./databases/users.json")
 
-async def process_text(text):
+async def process_text(text, sid=None):
 
     async def asyDebugPoster(message: str):
-        sid = request.sid
         if sid:
             socketio.emit('debug_message', {'message': message}, room=sid)
+        else:
+            print(f"NO_SID: {message}")
 
     # await asyncio.sleep(2)
 
@@ -96,7 +97,8 @@ def process():
     if users_db.get(username)["passwd_hash"] != password:
         return jsonify({"status": "Неверный логин и/или пароль. Сначала вам нужно зарегистрироваться"})
     # Запуск асинхронной функции
-    result = asyncio.run(process_text(text))
+    sid = data.get('sid', None)
+    result = asyncio.run(process_text(text, sid))
     result["status"] = "ok"
 
     if users_db.exists(username):
