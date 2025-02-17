@@ -16,7 +16,7 @@ class GoogleSearcher():
         url: str
     ) -> tuple[str, str]:
         try:
-            async with session.get(url) as response:
+            async with session.get(url, timeout=5) as response:
                 if response.status != 200:
                     return url, ""
 
@@ -50,7 +50,7 @@ class GoogleSearcher():
         
         connector = ProxyConnector.from_url(f"{proxy['protocol']}://{proxy['user']}:{proxy['password']}@{proxy['ip']}:{proxy['port']}") if proxy else None
         
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(connector) as session:
             tasks = [
                 self._fetch_url_content(session, url)
                 for i, url in enumerate(urls)
