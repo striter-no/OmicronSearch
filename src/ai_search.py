@@ -94,11 +94,11 @@ class Searcherer:
 
 Твой ответ должен быть в таком формате:
 ```
-<status>False</status>, // Полезен ли сайт для темы, или нет
+<status>False</status> // Полезен ли сайт для темы, или нет
 <analysis>...</analysis> // Опционально. Если статус true, то это твой анализ
 ```
 
-Ответ НЕ в запрошенном формате ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего.
+Убери ``` из своего ответа. Ответ НЕ в запрошенном формате ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего.
 """
         self.finala_system_prompt = """
 Тебе дается тема и анализ сайтов, которые были найдены в гугле. 
@@ -179,8 +179,8 @@ class Searcherer:
                         )
                         try:
                             json_ans = self._pseudo_html_parser(ans)
-                            with open(f"./sites_{site[:100]}_{rnd.randint(0, 1000000)}.json", "a") as f:
-                                f.write(ans + "\n")
+                            # with open(f"./sites_{rnd.randint(0, 1000000)}.json", "a") as f:
+                            #     f.write(ans + "\n")
                         except Exception as ex:
                             await debugHandler(f"Failed to parse pseudo-HTML: {ex}")
                             with open(f"./sites_failed_{rnd.randint(0, 1000000)}.json", "a") as f:
