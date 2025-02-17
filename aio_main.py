@@ -80,7 +80,7 @@ async def message_handler(message: Message) -> None:
     proxy = jn.load(open("./assets/proxy.json"))
     search = ais.Searcherer(proxy)
 
-    answer, per_theme, theme_name = await search.search(
+    answer, per_theme, theme_name, sources = await search.search(
         query=question,
         debug=True
     )
