@@ -19,9 +19,10 @@ class Searcherer:
         matches = re.findall(pattern, content)
         return {tag: value.strip() for tag, value in matches}
 
-    def __init__(self, proxy=None):
+    def __init__(self, proxy=None, site_maximum=510_000):
         
         self.proxy = proxy
+        self.site_maximum = site_maximum
         self.model = gpt.models_stock.claude_3_5_sonnet
 
         self.mgpt = gpt.Chat(
@@ -169,7 +170,7 @@ class Searcherer:
                 while True:
                     try:
                         ans = await self.persite_gpt.addMessageAsync(
-                            query=f"Первоначальный вопрос:<{query}>, Тема: <{sub_theme}>, Сайт: <{site}>, Содержимое:\n\n{content}"
+                            query=f"Первоначальный вопрос:<{query}>, Тема: <{sub_theme}>, Сайт: <{site}>, Содержимое:\n\n{content[:self.site_maximum]}"
                         )
                         try:
                             json_ans = self._pseudo_html_parser(ans)
