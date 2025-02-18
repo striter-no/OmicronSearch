@@ -40,7 +40,7 @@ async def process_text(text, sid=None):
     sources = [{"title": url[url.index("//")+2:50], "url": url} for url in raw_sources]
     
     with open("./ans.md", "w") as f:
-        f.write(per_theme)
+        f.write(answer)
 
     return {
         "content": markdown2.markdown(per_theme),

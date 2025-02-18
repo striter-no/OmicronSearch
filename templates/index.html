@@ -71,11 +71,12 @@
             min-height: 100vh;
             padding-bottom: 60px;
             transition: margin-left 0.3s ease;
-            background-image: url('./background');
-            background-size: cover;
+            background-color: #eeeeee;
             background-position: center;
+            /* background-image: url('./background');
+            background-size: cover;
             background-attachment: fixed;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px); */
         }
 
         .menu-toggle {
@@ -99,11 +100,11 @@
             box-shadow: 2px 0 4px rgba(0,0,0,0.1);
             transform: translateX(0px);
             transition: transform 0.3s ease;
-            z-index: 1000;
+            z-index: 1001;
         }
 
         .sidebar-left.visible {
-            transform: translateX(0);
+            transform: translateX(250px);
         }
 
         .user-panel {
@@ -224,11 +225,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(131, 131, 131, 0.719);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1002;
+            z-index: 1003;
         }
 
         .modal-overlay.visible {
@@ -535,11 +536,14 @@
                 if (data.status) {
                     console.log("Success")
                     // Сохраняем данные пользователя
+                    localStorage.setItem('searchHistory', '');
                     localStorage.setItem('username', username);
                     localStorage.setItem('password', passwordHash);
                     toggleLoginModal();
-
+                    
                     getHisotry();
+                    nullResult();
+                    renderHistory();
                 }
                 
                 // Автоматическое удаление уведомления через 3 секунды
@@ -564,19 +568,28 @@
             }
         }
 
+        function nullResult() {
+            const input = document.getElementById('searchInput');
+            const resultDiv = document.getElementById('result');
+
+            input.textContent = "";
+            resultDiv.textContent = "";
+        }
+
         async function sendRequest() {
             const input = document.getElementById('searchInput');
             const resultDiv = document.getElementById('result');
             
-                resultDiv.textContent = 'Обработка...';
-                // Показываем боковое меню
-                document.querySelector('.sidebar').classList.add('visible');
+            // Показываем боковое меню
+            document.querySelector('.sidebar').classList.add('visible');
             
             try {
                 // Получаем сохраненные данные пользователя
                 const username = localStorage.getItem('username') || '';
                 const password = localStorage.getItem('password') || '';
                 
+                nullResult();
+                resultDiv.textContent = 'Обработка...';
                 const response = await fetch('/process', {
                     method: 'POST',
                     headers: {
@@ -600,7 +613,7 @@
 
                     setTimeout(() => {
                         notification.remove();
-                    }, 3000);
+                    }, 4000);
 
                     throw new Error(data.status);
                 }

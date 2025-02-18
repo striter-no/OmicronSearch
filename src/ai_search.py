@@ -6,6 +6,8 @@ import json as jn
 import time
 import re
 
+from typing import Union
+
 async def asyPrint(msg):
     print(msg)
 
@@ -18,16 +20,29 @@ class Searcherer:
         "tag1": "content1"
     }
     """
-    def _pseudo_html_parser(self, content: str) -> dict[str, str]:
-        pattern = r'<([^>]+)>([^<]+)</\1>'
+    def xml_parser(self, content: str) -> dict[str, Union[str, dict]]:
+        # Remove leading/trailing whitespace and normalize newlines
+        content = content.strip().replace('\n', '')
+        
+        # Pattern to match tags with their content
+        pattern = r'<([^>]+)>(.*?)</\1>'
         matches = re.findall(pattern, content)
-        return {tag: value.strip() for tag, value in matches}
+        
+        result = {}
+        for tag, inner_content in matches:
+            # If inner content contains tags, parse recursively
+            if re.search(r'<[^>]+>', inner_content):
+                result[tag] = self.xml_parser(inner_content)
+            else:
+                result[tag] = inner_content.strip()
+        
+        return result
 
-    def __init__(self, proxy=None, site_maximum=220_000):
+    def __init__(self, model=gpt.models_stock.gpt_4o, proxy=None, site_maximum=220_000):
         
         self.proxy = proxy
         self.site_maximum = site_maximum
-        self.model = gpt.models_stock.claude_3_5_sonnet
+        self.model = model
 
         self.mgpt = gpt.Chat(
             model=self.model,
@@ -56,46 +71,42 @@ class Searcherer:
         self.mgsearch = search.GoogleSearcher()
 
         self.msystem_prompt = """
-Ты - система поиска информации. Отвечай в формате JSON. Разбей ответ на такие пункты:
+Ты - система поиска информации. Отвечай в заданном формате. Разбей ответ на такие пункты:
 ```
-{
-    "tasks" : [
-    {
-        "name": "...",
-        "content": "..."
-    },
-    ...
-    ]
-}
+<tasks>
+<...> // Имя задачи (читабельное, на русском)
+    ... // Вопрос, который надо исследовать
+</...> // Имя задачи
+... // Другие задачи, по такому же принципу
+</tasks>
 ```
 Твоя задача: разбить задачу на несколько под-задач, для дальнейшего подробного исследования. 
 Каждая тема должна быть самодостаточна, т.е. не опираться на результаты исследования предыдущих тем, так как они будут рассматриваться отдельно.
 
-В ответе не используй ``` для выделения JSON, пиши сразу в формате JSON. Ответ НЕ в формате JSON ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего
+В ответе не используй ``` для выделения кода, пиши сразу в предоставленном формате.. Ответ НЕ в данном формате ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего
 """
         self.subsearch_system_prompt = """
 Тебе дается общая тема и вопрос. Твоя задача составить запрос в гугл, чтобы получить ответ на этот вопрос. Отвечай в формате JSON:
 
 ```
-{
-    "theme": "...",
-    "sub_theme": "...",
-    "prompt": "...", // Твой запрос в гугл
-}
+<theme>...</theme> // Тема вопроса
+<sub_theme>...</sub_theme> // Под тема
+<prompt>...</prompt> // Твой запрос в гугл
 ```
 
-В ответе не используй ``` для выделения JSON, пиши сразу в формате JSON. Ответ НЕ в формате JSON ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего. 
+В ответе не используй ``` для выделения кода, пиши сразу в предоставленном формате.. Ответ НЕ в данном формате ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего
 """
         self.persite_system_prompt = """
 Тебе дается конкретная тема и содержимое сайта, который был найден по запросу в гугл. 
 Тебе нужно составить анализ содержимого этого сайта (выудить информацию, которая полезна для темы). 
-Сделай акцент не на структуре и обобщении, а на содержании и практике.
+Сделай акцент не на структуре и обобщении, а на содержании и практике. 
+Хорошо будет, если ты сможешь привести конкретные примеры и цифры из текста.
 Не обязательно, что сайт пригодиться для анализа темы, для этого, сверяй его с общим вопросом.
 
 Твой ответ должен быть в таком формате:
 ```
+<analysis>...</analysis> // Анализ сайта
 <status>False</status> // Полезен ли сайт для темы, или нет
-<analysis>...</analysis> // Опционально. Если статус true, то это твой анализ
 ```
 
 Убери ``` из своего ответа. Ответ НЕ в запрошенном формате ОТКЛОНЯЕТСЯ. Очень важно, чтобы твой ответ ПОЛНОСТЬЮ соответствовал моим требованиям. Не добавляй ничего лишнего.
@@ -126,7 +137,15 @@ class Searcherer:
         ans = await self.mgpt.addMessageAsync(
             query=f"""Запрос: <{query}>. """
         )
-        tasks = jn.loads(ans)["tasks"]
+        print(ans)
+
+        tasks = []
+        xml_tasks = self.xml_parser(ans)
+        for task in xml_tasks["tasks"]:
+            tasks.append({
+                "name": task,
+                "content": xml_tasks["tasks"][task],
+            })
         
         google_results = dict()
         
@@ -143,11 +162,15 @@ class Searcherer:
                     )
                     break
                 except gpt.g4f.errors.ResponseStatusError as ex:
-                    print(f"Error: {ex.args}")
+                    print(f"[0] Error: {ex.args}")
                     time.sleep(tm)
                     tm *= 1.5
+                except Exception as ex:
+                    print(f"[0] Undefinded Error: {ex}")
+                    time.sleep(tm)
 
-            json_ans = jn.loads(ans)
+            json_ans = self.xml_parser(ans)
+            print(json_ans)
             results = await self.mgsearch.search(
                 query=json_ans["prompt"],
                 num_results=depth,
@@ -178,7 +201,7 @@ class Searcherer:
                             query=f"Первоначальный вопрос:<{query}>, Тема: <{sub_theme}>, Сайт: <{site}>, Содержимое:\n\n{content[:self.site_maximum]}"
                         )
                         try:
-                            json_ans = self._pseudo_html_parser(ans)
+                            json_ans = self.xml_parser(ans)
                             # with open(f"./sites_{rnd.randint(0, 1000000)}.json", "a") as f:
                             #     f.write(ans + "\n")
                         except Exception as ex:
@@ -191,10 +214,13 @@ class Searcherer:
                             sources.append(site)
                         break
                     except gpt.g4f.errors.ResponseStatusError as ex:
-                        print(f"Error: {ex.args}")
+                        print(f"[1] Error: {ex.args}")
                         time.sleep(tm)
                         tm *= 1.5
-        
+                    except Exception as ex:
+                        print(f"[1] Undefinded Error: {ex}")
+                        time.sleep(tm)
+
         # with open("./assets/analysis.json", "w") as f:
         #     try:
         #         jn.dump(google_analysis, f, indent=4, ensure_ascii=False)
@@ -215,9 +241,12 @@ class Searcherer:
                     )
                     break
                 except gpt.g4f.errors.ResponseStatusError as ex:
-                    print(f"Error: {ex.args}")
+                    print(f"[2] Error: {ex.args}")
                     time.sleep(tm)
                     tm *= 1.5
+                except Exception as ex:
+                    print(f"[2] Undefinded Error: {ex}")
+                    time.sleep(tm)
 
         per_site = f"# {theme_name.capitalize()}\n"
         for sub_theme, ans in final_analysis.items():
@@ -236,9 +265,12 @@ class Searcherer:
                 )
                 break
             except gpt.g4f.errors.ResponseStatusError as ex:
-                print(f"Error: {ex.args}")
+                print(f"[3] Error: {ex.args}")
                 time.sleep(tm)
                 tm *= 1.5
+            except Exception as ex:
+                print(f"[3] Undefinded Error: {ex}")
+                time.sleep(tm)
         
         return final, per_site, theme_name, sources
 
